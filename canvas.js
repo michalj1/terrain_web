@@ -1,6 +1,6 @@
 const rad = Math.PI / 180;
 const IlliniBlue = new Float32Array([0.075, 0.16, 0.292, 1]);
-const DiagChunks = 3;
+const DiagChunks = 7;
 
 /**
  * Given the source code of a vertex and fragment shader, compiles them,
@@ -113,15 +113,12 @@ function draw() {
     gl.uniformMatrix4fv(gl.getUniformLocation(program, 'p'), false, projection);
     gl.uniform3fv(gl.getUniformLocation(program, 'lightdir'), normalize(light));
 
-    for (let i = 0; i < renderedChunks.length; i += 1) {
-        let hexGrid = renderedChunks[i];
-        for (let j = 0; j < hexGrid.length; j += 1) {
-            let color = hexGrid[j].color;
-            gl.uniformMatrix4fv(gl.getUniformLocation(program, 'm'), false, hexGrid[j].model);
-            gl.uniform3fv(gl.getUniformLocation(program, 'color'), color);
+    for (let j = 0; j < terrainGrid.length; j += 1) {
+        let color = terrainGrid[j].color;
+        gl.uniformMatrix4fv(gl.getUniformLocation(program, 'm'), false, terrainGrid[j].model);
+        gl.uniform3fv(gl.getUniformLocation(program, 'color'), color);
 
-            gl.drawElements(geom.mode, geom.count, geom.type, 0);
-        }
+        gl.drawElements(geom.mode, geom.count, geom.type, 0);
     }
 
 }
@@ -130,16 +127,16 @@ function draw() {
 function moveCamera() {
     // Translation
     if (keysBeingPressed['w']) {
-        window.eye = add(window.eye, div([...facing, 0], 64));
+        window.eye = add(window.eye, div([...facing, 0], 8));
     }
     if (keysBeingPressed['a']) {
-        window.eye = add(window.eye, div([-facing[1], facing[0], 0], 64));
+        window.eye = add(window.eye, div([-facing[1], facing[0], 0], 8));
     }
     if (keysBeingPressed['s']) {
-        window.eye = sub(window.eye, div([...facing, 0], 64));
+        window.eye = sub(window.eye, div([...facing, 0], 8));
     }
     if (keysBeingPressed['d']) {
-        window.eye = add(window.eye, div([facing[1], -facing[0], 0], 64));
+        window.eye = add(window.eye, div([facing[1], -facing[0], 0], 8));
     }
 
     // Rotation
@@ -174,13 +171,13 @@ function moveCamera() {
     if (keysBeingPressed['wheel'] != 0) {
         if (keysBeingPressed['wheel'] < 0) {
             // Zoom in
-            window.eye[2] -= 0.1;
+            window.eye[2] -= 0.2;
             if (window.eye[2] < 0.1) {
                 window.eye[2] = 0.1;
             }
         } else {
             // Zoom out
-            window.eye[2] += 0.1;
+            window.eye[2] += 0.2;
             if (window.eye[2] > 10) {
                 window.eye[2] = 10;
             }
@@ -196,8 +193,10 @@ function moveCamera() {
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
-
-
+    // if (Math.floor(seconds) > lastSecond) {
+    //     erode(terrainGrid, DiagChunks);
+    //     lastSecond = Math.floor(seconds);
+    // }
 
     moveCamera();
     draw();
@@ -218,6 +217,25 @@ function fillScreen() {
         gl.viewport(0,0, canvas.width, canvas.height);
         window.projection = m4perspNegZ(0.01, 100, 1.5, canvas.width, canvas.height);
     }
+}
+
+function flattenedChunks(grid) {
+    let newGrid = Array(DiagChunks**2 * ChunkSize**2);
+    for (let i = 0; i < DiagChunks**2; i += 1) {
+        for (let j = 0; j < ChunkSize**2; j += 1) {
+            const point = grid[i][j];
+            const chunkRow = Math.floor(i / DiagChunks);
+            const chunkCol = i % DiagChunks;
+            const pointRow = Math.floor(j / ChunkSize);
+            const pointCol = j % ChunkSize;
+
+            const chunkOffset = (chunkRow * ChunkSize**2 * DiagChunks) + (chunkCol * ChunkSize)
+            const pointOffset = (pointRow * ChunkSize * DiagChunks) + pointCol;
+            const newIndex = chunkOffset + pointOffset;
+            newGrid[newIndex] = point;
+        }
+    }
+    return newGrid;
 }
 
 /** Compile, link, set up geometry */
@@ -252,17 +270,21 @@ async function setup(event) {
     window.addEventListener('wheel', event => keysBeingPressed['wheel'] = event.deltaY);
 
     console.log("CREATING CHUNKS");
-    window.renderedChunks = [];
+    window.terrainGrid = [];
     window.centerChunk = [0, 0];
     for (let i = 0; i < DiagChunks; i += 1) {
         for (let j = 0; j < DiagChunks; j += 1) {
-            let hexGrid = createChunk();
+            let hexGrid = createChunk(i * DiagChunks + j, DiagChunks);
             generateTerrain(hexGrid, [i - Math.floor(DiagChunks / 2), j - Math.floor(DiagChunks / 2)]);
-            renderedChunks.push(hexGrid);
+            terrainGrid.push(hexGrid);
         }
     }
+    window.terrainGrid = flattenedChunks(window.terrainGrid);
+    erode(terrainGrid, DiagChunks);
+
     window.geom = setupGeomery(HexGeom);
 
+    window.lastSecond = 0;
     requestAnimationFrame(timeStep);
 }
 

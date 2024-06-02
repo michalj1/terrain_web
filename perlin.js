@@ -19,25 +19,25 @@ function initVectors(chunkPos, octaves, seed) {
     }
 }
 
-/** Calculates the perlin value  */
+/** Calculates the perlin value in the range [-0.5, 0.5] */
 function perlin(x, y, o) {
-    let x0 = Math.floor(x);
-    let x1 = x0 + 1;
-    let y0 = Math.floor(y);
-    let y1 = y0 + 1;
+    const x0 = Math.floor(x);
+    const x1 = x0 + 1;
+    const y0 = Math.floor(y);
+    const y1 = y0 + 1;
 
-    let dx = x - x0;
-    let dy = y - y0;
+    const dx = x - x0;
+    const dy = y - y0;
 
     let n0 = dot(altVectors[o][x0][y0], [dx, dy]);
     let n1 = dot(altVectors[o][x1][y0], [1 - dx, dy]);
-    var i1 = interpolate(n0, n1, dx);
+    var i0 = interpolate(n0, n1, dx);
 
     n0 = dot(altVectors[o][x0][y1], [dx, 1 - dy]);
     n1 = dot(altVectors[o][x1][y1], [1 - dx, 1 - dy]);
-    var i2 = interpolate(n0, n1, dx);
+    var i1 = interpolate(n0, n1, dx);
   
-    return interpolate(i1, i2, dy);
+    return interpolate(i0, i1, dy);
 }
 
 function interpolate(n0, n1, p) {
