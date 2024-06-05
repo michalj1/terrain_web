@@ -1,6 +1,6 @@
 const rad = Math.PI / 180;
 const IlliniBlue = new Float32Array([0.075, 0.16, 0.292, 1]);
-const DiagChunks = 7;
+const DiagChunks = 15;
 
 /**
  * Given the source code of a vertex and fragment shader, compiles them,
@@ -193,10 +193,10 @@ function moveCamera() {
 /** Compute any time-varying or animated aspects of the scene */
 function timeStep(milliseconds) {
     let seconds = milliseconds / 1000;
-    // if (Math.floor(seconds) > lastSecond) {
-    //     erode(terrainGrid, DiagChunks);
-    //     lastSecond = Math.floor(seconds);
-    // }
+    if (Math.floor(seconds) > lastSecond) {
+        erode(terrainGrid, DiagChunks);
+        lastSecond = Math.floor(seconds);
+    }
 
     moveCamera();
     draw();

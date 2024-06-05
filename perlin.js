@@ -30,11 +30,11 @@ function perlin(x, y, o) {
     const dy = y - y0;
 
     let n0 = dot(altVectors[o][x0][y0], [dx, dy]);
-    let n1 = dot(altVectors[o][x1][y0], [1 - dx, dy]);
+    let n1 = dot(altVectors[o][x1][y0], [dx - 1, dy]);
     var i0 = interpolate(n0, n1, dx);
 
-    n0 = dot(altVectors[o][x0][y1], [dx, 1 - dy]);
-    n1 = dot(altVectors[o][x1][y1], [1 - dx, 1 - dy]);
+    n0 = dot(altVectors[o][x0][y1], [dx, dy - 1]);
+    n1 = dot(altVectors[o][x1][y1], [dx - 1, dy - 1]);
     var i1 = interpolate(n0, n1, dx);
   
     return interpolate(i0, i1, dy);

@@ -8,7 +8,7 @@ const SoilSoftness = 0.3;
 const Evaporation = 0.1;
 const RainCycle = 15;
 const Retention = 0.2;
-const Iterations = 150;
+const Iterations = 15;
 
 const HexGeom = {
     "attributes" : {
@@ -112,8 +112,6 @@ function generateTerrain(hexGrid, chunkPos, seed=0) {
 }
 
 function initializeTerrain(hexGrid) {
-    let minPerlin = 1000;
-    let maxPerlin = -1000;
     for (let i = 0; i < ChunkSize; i += 1) {
         for (let j = 0; j < ChunkSize; j += 1) {
             // Calculate pixel position
@@ -192,7 +190,6 @@ function assignColor(hexGrid) {
         } else {
             hex.color = [0.5, 0.8, 1];
         }
-        // hex.color = [0, 0, hex.precip];
     }
 }
 
